@@ -48,17 +48,17 @@
             </div>
             <div id="divSettings" style="display: none; height: 100%; text-algin: left">
 
-                <label>Setting1:</label><br>
-                <input type="text" id="iSetting1" placeholder="Enter 'Setting1'">
+                <label>Bullet hole size:</label><br>
+                <input type="text" class="setting numbersOnly" id="iSetting1" placeholder="20">
                 <br><br>
                 <label>Setting2:</label><br>
-                <input type="text" id="iSetting2" placeholder="Enter 'Setting2'">
+                <input type="text" class="setting" id="iSetting2" placeholder="Enter 'Setting2'">
                 <br><br>
                 <label>Setting3:</label><br>
-                <input type="text" id="iSetting3" placeholder="Enter 'Setting3'">
+                <input type="text" class="setting" id="iSetting3" placeholder="Enter 'Setting3'">
                 <br><br>
                 <label>Setting4:</label><br>
-                <input type="text" id="iSetting4" placeholder="Enter 'Setting4'">
+                <input type="text" class="setting" id="iSetting4" placeholder="Enter 'Setting4'">
 
             </div>
         </div>
@@ -74,6 +74,8 @@
     var Boom = {};
     (function(Boom){
         
+        var bulletSize = 20;
+        
         Boom.InitView = function() {
             // knyt knappar osv..
             $('#btnClear').on('click', Boom.BtnClear);
@@ -84,19 +86,31 @@
             $("#imgTarget").click(function (ev) {
                 mouseX = ev.pageX;
                 mouseY = ev.pageY
-                //alert(mouseX + ' ' + mouseY);
-                var size = 30;
-                //var size = '10px';
                 $("body").append(
                     $('<div class="circleBase type2"></div>')
                         .css('position', 'absolute')
-                        .css('top', (mouseY - (size/2)) + 'px')
-                        .css('left', (mouseX - (size/2)) + 'px')
-                        .css('width', size + 'px')
-                        .css('height', size + 'px')
+                        .css('top', (mouseY - (bulletSize/2)) + 'px')
+                        .css('left', (mouseX - (bulletSize/2)) + 'px')
+                        .css('width', bulletSize + 'px')
+                        .css('height', bulletSize + 'px')
                 );
-            })
+            });
+            $(".setting").on('blur', Boom.SaveSetting);
         };
+        
+        Boom.SaveSetting = function(elem) {
+            //alert(elem.target.id);
+            if(elem && elem.target && elem.target.id){
+                var elemTarget = $("#" + elem.target.id);
+                if(elemTarget.val()) {
+                    if($.isNumeric(elemTarget.val()))
+                        bulletSize = elemTarget.val();
+                    
+                    elemTarget.attr("placeholder", bulletSize);
+                    elemTarget.val('');
+                }
+            }
+        }
         
         Boom.MenuClick = function(e){
             if(e) e.preventDefault();
