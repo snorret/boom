@@ -24,6 +24,7 @@
       <script src="https://oss.maxcdn.com/html5shiv/3.7.3/html5shiv.min.js"></script>
       <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
     <![endif]-->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
 </head>
 
 <body>
@@ -37,13 +38,38 @@
             </nav>
             <h3 class="text-muted">BOOM</h3> </div>
         <div class="jumbotron">
-            <h1>Tavla</h1> </div>
-        <p class="btn-rensa"><a class="btn btn-lg btn-success" href="#" role="button">Rensa</a></p>
+            <h1>Tavla</h1>
+        </div>
+        <p class="btn-rensa"><a class="btn btn-lg btn-success" href="#" role="button" id="btnClear">Rensa</a></p>
         <footer class="footer"> </footer>
     </div>
     <!-- /container -->
     <!-- IE10 viewport hack for Surface/desktop Windows 8 bug -->
     <script src="../../assets/js/ie10-viewport-bug-workaround.js"></script>
+    
+    <script type="text/javascript">
+
+    var Jumbotron = {};
+    (function(Jumbotron){
+        
+        Jumbotron.InitView = function() {
+            // knyt knappar osv..
+            $('#btnClear').on('click', Jumbotron.btnClear);
+        };
+        
+        Jumbotron.btnClear = function(){
+          alert('Lund! Rensa din navel!');
+        };
+        
+        
+    }(Jumbotron));
+    
+    $(document).ready(function () {
+        Jumbotron.InitView();
+    });
+
+    </script>
 </body>
 
 </html>
+
