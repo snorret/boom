@@ -25,6 +25,7 @@
       <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
     <![endif]-->
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+    <link href="css/target.css" rel="stylesheet">
 </head>
 
 <body>
@@ -80,27 +81,24 @@
             // meny..
             $('.menu').on('click', Boom.MenuClick);
             
-            //$('#divTarget').prepend('<img id="imgTarget" src="images/target.png" onclick="Boom.ImgClick()" style="display: block; margin-left: auto; margin-right: auto; max-width:100%; max-height:100%;"/>')
-            
-            
-//             $('#imgTarget').click(function(e) {
-//                var offset = $(this).offset();
-//                alert(e.pageX - offset.left);
-//                alert(e.pageY - offset.top);
-//              });
-            
-            $("#imgTarget").click(Boom.ImgClick);
+            $("#imgTarget").click(function (ev) {
+                mouseX = ev.pageX;
+                mouseY = ev.pageY
+                //alert(mouseX + ' ' + mouseY);
+                var color = '#000000';
+                var size = 30;
+                //var size = '10px';
+                $("body").append(
+                    $('<div class="circleBase type2"></div>')
+                        .css('position', 'absolute')
+                        .css('top', (mouseY - (size/2)) + 'px')
+                        .css('left', (mouseX - (size/2)) + 'px')
+                        .css('width', size + 'px')
+                        .css('height', size + 'px')
+                        .css('background-color', color)
+                );
+            })
         };
-        
-        Boom.ImgClick = function(e) {
-            if(e) e.preventDefault();
-//            
-//            var offset = $(e).offset();
-//            alert(e.pageX - offset.left);
-//            alert(e.pageY - offset.top);
-            
-            alert('e! - x:' + e.pageX + " y: " + e.pageY);
-        }
         
         Boom.MenuClick = function(e){
             if(e) e.preventDefault();
@@ -109,6 +107,9 @@
             
             $(".menu").each(function() {
                 var div = $("#" + this.id.replace('menu', 'div'));
+                
+                $(".circleBase").remove();
+                
                 if(this.id === btnId){
                     Boom.ActivateDiv(this, div);
                 }
@@ -137,6 +138,7 @@
         Boom.BtnClear = function(e){
             if(e) e.preventDefault();
             alert('Lund! Rensa din navel!');
+            $(".circleBase").remove();
         };
         
         jQuery.fn.visible = function() {
