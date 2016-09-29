@@ -85,7 +85,6 @@
                 mouseX = ev.pageX;
                 mouseY = ev.pageY
                 //alert(mouseX + ' ' + mouseY);
-                var color = '#000000';
                 var size = 30;
                 //var size = '10px';
                 $("body").append(
@@ -95,7 +94,6 @@
                         .css('left', (mouseX - (size/2)) + 'px')
                         .css('width', size + 'px')
                         .css('height', size + 'px')
-                        .css('background-color', color)
                 );
             })
         };
