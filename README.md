@@ -2,4 +2,4 @@
 ## Project description
 ## Project structure
 ## Install
-## ...
+## Hardware
