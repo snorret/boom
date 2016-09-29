@@ -32,13 +32,16 @@
         <div class="header clearfix">
             <nav>
                 <ul class="nav nav-pills pull-right">
-                    <li role="presentation" class="active"><a href="#">Board</a></li>
-                    <li role="presentation"><a href="#">Settings</a></li>
+                    <li role="presentation" id="menuBoard" class="menu active"><a href="#">Board</a></li>
+                    <li role="presentation" id="menuSettings" class="menu "><a href="#">Settings</a></li>
                 </ul>
             </nav>
             <h3 class="text-muted">BOOM</h3> </div>
-        <div class="jumbotron">
+        <div class="jumbotron" id="divBoard" style="height: 200px">
             <h1>Tavla</h1>
+        </div>
+        <div class="jumbotron" id="divSettings" style="display: none; height: 200px">
+            <h1>Settings..</h1>
         </div>
         <p class="btn-rensa"><a class="btn btn-lg btn-success" href="#" role="button" id="btnClear">Rensa</a></p>
         <footer class="footer"> </footer>
@@ -49,27 +52,75 @@
     
     <script type="text/javascript">
 
-    var Jumbotron = {};
-    (function(Jumbotron){
+    var Boom = {};
+    (function(Boom){
         
-        Jumbotron.InitView = function() {
+        Boom.InitView = function() {
             // knyt knappar osv..
-            $('#btnClear').on('click', Jumbotron.btnClear);
+            $('#btnClear').on('click', Boom.BtnClear);
+            
+            // meny..
+            //$('#menuBoard').on('click', Boom.MenuClick);
+            //$('#menuSettings').on('click', Boom.MenuClick);
+            $('.menu').on('click', Boom.MenuClick);
         };
         
-        Jumbotron.btnClear = function(){
-          alert('Lund! Rensa din navel!');
+        Boom.MenuClick = function(e){
+            if(e) e.preventDefault();
+            
+            var btnId = this.id;
+            
+            $(".menu").each(function() 
+                if(this.id === btnId){
+                    Boom.ActivateDiv(this);
+                }
+                else {
+                    Boom.DeactivateDiv(this);
+                }
+            });
+        };
+        
+        Boom.ActivateDiv = function(item) {
+            $(item).addClass( "active" );
+            
+            var div = $("#" + item.id.replace('menu', 'div'));
+            
+            if(div){
+                div.visible();
+            }
+        }
+        
+        Boom.DeactivateDiv = function(item) {
+            $(item).removeClass( "active" );
+            
+            var div = $("#" + item.id.replace('menu', 'div'));
+            
+            if(div){
+                div.invisible();
+            }
+        }
+        
+        Boom.BtnClear = function(e){
+            if(e) e.preventDefault();
+            alert('Lund! Rensa din navel!');
+        };
+        
+        jQuery.fn.visible = function() {
+            return this.css('display','block');
+        };
+
+        jQuery.fn.invisible = function() {
+            return this.css('display','none');
         };
         
         
-    }(Jumbotron));
+    }(Boom));
     
     $(document).ready(function () {
-        Jumbotron.InitView();
+        Boom.InitView();
     });
 
     </script>
 </body>
 
 </html>
-
