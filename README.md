@@ -1,2 +1,6 @@
 # B.O.O.M
-Asdf
+## Project description
+asdf
+## Project structure
+## Install
+## Hardware
