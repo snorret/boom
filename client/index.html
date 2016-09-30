@@ -27,9 +27,12 @@
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
     <link href="css/target.css" rel="stylesheet">
 </head>
-
+     
+<!--    <div class="container" id="notifyer" style="display:none; height: 40px; background-color: lightgreen; border-radius: 10px;"><label id="notifyerLabel">baaaaah</label></div> -->
+    <!--border-bottom-left-radius: 10px; border-bottom-right-radius: 10px-->
 <body>
-    <div class="container">
+    <br>
+    <div class="container" id="divMainContainer">
         <div class="header clearfix">
             <nav>
                 <ul class="nav nav-pills pull-right">
@@ -59,7 +62,6 @@
                 <br><br>
                 <label>Setting4:</label><br>
                 <input type="text" class="setting" id="iSetting4" placeholder="Enter 'Setting4'">
-
             </div>
         </div>
         <p class="btn-rensa"><a class="btn btn-lg btn-success" href="#" role="button" id="btnClear">Rensa</a></p>
@@ -104,8 +106,23 @@
             if(elem && elem.target && elem.target.id){
                 var elemTarget = $("#" + elem.target.id);
                 if(elemTarget.val()) {
-                    if($.isNumeric(elemTarget.val()))
+                    if($.isNumeric(elemTarget.val())){
                         bulletSize = elemTarget.val();
+                        
+                        $(".notifyer").remove(); // remove prev. notifyers from dom..
+                        
+                        var mainDiv = $("#divMainContainer");
+                        var left = mainDiv.offset().left
+                        
+                        var notifyer = $('<div class="container notifyer" style="background-color: lightgreen; border-radius: 10px;"><center><label id="notifyerLabel">Bullet size changed to: '+ bulletSize +'</label></center></div>')
+                                            .css('position', 'absolute')
+                                            .css("top", "0px")
+                                            .css("left", left+ "px")
+                                            .css('width', '100%')
+                                            .css('height', '40px');
+                        
+                        notifyer.hide().appendTo(mainDiv).fadeIn().delay(4000).fadeOut();
+                    }
                     
                     elemTarget.attr("placeholder", bulletSize);
                     elemTarget.val('');
