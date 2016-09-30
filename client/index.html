@@ -52,7 +52,7 @@
             <div id="divSettings" style="display: none; height: 100%; text-algin: left">
 
                 <label>Bullet hole size:</label><br>
-                <input type="text" class="setting numbersOnly" id="iSetting1" placeholder="20">
+                <input type="text" class="setting numbersOnly" id="iSetting1" placeholder="3.14159265359"> <!-- because Pi!!! -->
                 <br><br>
                 <label>Setting2:</label><br>
                 <input type="text" class="setting" id="iSetting2" placeholder="Enter 'Setting2'">
@@ -77,6 +77,8 @@
     (function(Boom){
         
         var bulletSize = 20;
+        var bulletSizeMax = 100;
+        var bulletSizeMin = 10;
         
         Boom.InitView = function() {
             // knyt knappar osv..
@@ -106,28 +108,50 @@
             if(elem && elem.target && elem.target.id){
                 var elemTarget = $("#" + elem.target.id);
                 if(elemTarget.val()) {
-                    if($.isNumeric(elemTarget.val())){
-                        bulletSize = elemTarget.val();
+                    
+                    var elemVal =  elemTarget.val().replace(",", "."); // numeric är med punkt..
+                    
+                    if($.isNumeric(elemVal)) {
+                        var tempBulletSize = parseFloat(elemVal);
                         
-                        $(".notifyer").remove(); // remove prev. notifyers from dom..
-                        
-                        var mainDiv = $("#divMainContainer");
-                        var left = mainDiv.offset().left
-                        
-                        var notifyer = $('<div class="container notifyer" style="background-color: lightgreen; border-radius: 10px;"><center><label id="notifyerLabel">Bullet size changed to: '+ bulletSize +'</label></center></div>')
-                                            .css('position', 'absolute')
-                                            .css("top", "0px")
-                                            .css("left", left+ "px")
-                                            .css('width', '100%')
-                                            .css('height', '40px');
-                        
-                        notifyer.hide().appendTo(mainDiv).fadeIn().delay(4000).fadeOut();
+                        if (tempBulletSize < bulletSizeMax && tempBulletSize > bulletSizeMin){
+                            bulletSize = tempBulletSize;
+                            Boom.Notify(notifyType.Success, "Bullet size changed to: " + elemTarget.val());
+                        }
+                        else {
+                            Boom.Notify(notifyType.Info, "Bullet size has to be between " + bulletSizeMin + " and " + bulletSizeMax);
+                        }
+                    }
+                    else {
+                        Boom.Notify(notifyType.Error, "Failed to update bullet size: " + elemTarget.val() + " is not numeric", 2000);
                     }
                     
                     elemTarget.attr("placeholder", bulletSize);
                     elemTarget.val('');
                 }
             }
+        }
+                
+        notifyType = {
+            Error : "salmon",
+            Success : "lightgreen",
+            Info : "Khaki"
+        }
+        
+        Boom.Notify = function(notifyType, msg, delay = 5000) {
+            $(".notifyer").remove(); // remove prev. notifyers from dom..
+                        
+            var mainDiv = $("#divMainContainer");
+            var left = mainDiv.offset().left
+
+            var notifyer = $('<div class="container notifyer" style="background-color: '+notifyType+'; border-radius: 10px;"><center><label id="notifyerLabel">'+ msg +'</label></center></div>')
+                                .css('position', 'absolute')
+                                .css("top", "0px")
+                                .css("left", left+ "px")
+                                .css('width', '100%')
+                                .css('height', '39px');
+
+            notifyer.hide().appendTo(mainDiv).fadeIn().delay(delay).fadeOut();
         }
         
         Boom.MenuClick = function(e){
@@ -167,7 +191,6 @@
         
         Boom.BtnClear = function(e){
             if(e) e.preventDefault();
-            alert('Lund! Rensa din navel!');
             $(".circleBase").remove();
         };
         
