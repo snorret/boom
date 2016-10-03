@@ -1,0 +1,11 @@
+[Unit]
+Description=Boom server service
+After=multi-user.target
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/nodejs /var/git/boom/server/server.js
+SuccessExitStatus=143
+
+[Install]
+WantedBy=multi-user.target
