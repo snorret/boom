@@ -4,7 +4,7 @@ After=multi-user.target
 
 [Service]
 Type=simple
-ExecStart=/usr/bin/nodejs /var/git/boom/server/server.js
+ExecStart=/usr/bin/nodejs /var/git/boom/index.js
 SuccessExitStatus=143
 
 [Install]
