@@ -1,9 +1,18 @@
-var http = require('http');
+var express = require('express')
 const config = require('./config.json')
 
-http.createServer(function (req, res) {
-    res.writeHead(200, {'Content-Type': 'application/json'});
-    res.end('["helloo kugen"]');
-}).listen(config.port, config.ip);
-console.log('Server running at: ' + config.ip + ':' + config.port);
+var app = express();
+
+app.get('/', function(req, res) {
+    res.send('Hello kuug');
+});
+
+app.get('/kug/', function(req, res) {
+    res.send('Hello fetta');
+});
+
+app.listen(config.port, function() {
+    console.log('Server running at: ' + config.ip + ':' + config.port);
+});
+
 
