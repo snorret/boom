@@ -3,12 +3,10 @@ const config = require('./config.json')
 
 var app = express();
 
-app.get('/', function(req, res) {
-    res.send('Hello kuug');
-});
+app.use(express.static('client'))
 
 app.get('/kug/', function(req, res) {
-    res.send('Hello fetta');
+    res.send('Hello feddaah!');
 });
 
 app.listen(config.port, function() {
