@@ -8,7 +8,7 @@ var app = express();
 var server = http.Server(app);
 var io = socketIo(server);
 
-app.use(express.static('client'))
+app.use(express.static(__dirname + '/client'))
 
 app.get('/kug/', function(req, res) {
     res.send('Hello feddaah!');
