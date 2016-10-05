@@ -42,6 +42,7 @@
                 </ul>
             </nav>
             <h3 class="text-muted">BOOM</h3>
+            <div id="numberOfClients">Number of clients connected: <span id="numberOfClientsValue">Unknown</span></div>
         </div>
         <div class="jumbotron" id="divBoard" style="height: 100%">
             <h1>Tavla</h1>
@@ -81,6 +82,9 @@
         
 		Boom.InitSocketIo = function() {
 			var socket = io();
+            socket.on('numberOfClients', function(value) {
+                $('#numberOfClientsValue').text(value)
+            });
 		};
 		
         Boom.InitView = function() {
