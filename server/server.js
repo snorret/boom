@@ -33,7 +33,7 @@ BoomServer.prototype.onClientDisconnect = function() {
     
     self.socketIo.emit('numberOfClients', self.numberOfCurrentClientsConnected);
     
-    console.log('User disconnected, currently connected now: ' + self.numberOfCurrentClientsConnected);
+    console.log('User disconnected, users connected now: ' + self.numberOfCurrentClientsConnected);
 }
 
 module.exports = BoomServer;
