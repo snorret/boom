@@ -32,23 +32,23 @@
     
 <body>
     <br> <!-- För att notifyer ska få plats utan att lägga sig över meny... -->
-    <div class="container" id="divMainContainer" style="height: 500px">
+    <div class="container" id="divMainContainer" >
         <div class="header clearfix">
             <nav>
                 <ul class="nav nav-pills pull-right">
-                    <li role="presentation" id="menuBoard" class="menu active"><a href="#">Board</a></li>
-                    <li role="presentation" id="menuTarget" class="menu "><a href="#">Target</a></li>
+                    <li role="presentation" id="menuBoard" class="menu"><a href="#">Board</a></li>
+                    <li role="presentation" id="menuTarget" class="menu active"><a href="#">Target</a></li>
                     <li role="presentation" id="menuSettings" class="menu "><a href="#">Settings</a></li>
                 </ul>
             </nav>
             <h3 class="text-muted">BOOM</h3>
             <div id="numberOfClients">Number of clients connected: <span id="numberOfClientsValue">Unknown</span></div>
         </div>
-        <div class="jumbotron" id="divBoard" style="height: 100%">
+        <div class="jumbotron" id="divBoard" style="display: none; height: 100%">
             <h1>Tavla</h1>
         </div>
-        <div id="divTarget" style="display: none; height: 500px; position: relative;">
-            <img id="imgTarget" src="images/target.png" style="display: block; margin-left: auto; margin-right: auto; max-width:100%; max-height:100%;"/>
+        <div id="divTarget" style="position: relative; height: auto; width: auto">                
+            <img id="imgTarget" src="images/target.png" style="display: block; margin-left: auto; margin-right: auto; max-width:100%; "/>
         </div>
         <div id="divSettings" style="display: none; height: 100%; text-algin: left">
             <label>Bullet hole size:</label><br>
@@ -86,35 +86,123 @@
                 $('#numberOfClientsValue').text(value)
             });
 		};
-		
+        
+		var mainHeight = $("#divMainContainer").height();
+        var mainWidth = $("#divMainContainer").width();
+        var targetHeight = $("#divTarget").height();
+        var targetWidth = $("#divTarget").width();
+        
         Boom.InitView = function() {
+            
+            $(window).on( "orientationchange", function( event ) {
+                $("#divMainContainer").toggle().toggle();
+                
+                
+                
+
+            });
+            
 			// knyt knappar osv..
             $('#btnClear').on('click', Boom.BtnClear);
             
             // meny..
             $('.menu').on('click', Boom.MenuClick);
 
-            $("#divTarget").click(function (ev) {
-                if($("#divTarget").hasClass("noTarget")) {
-                    return;
-                }
-                var testY = ev.pageY - $("#divTarget").offset().top;
-                var testX = ev.pageX - $("#divTarget").offset().left;
-                var mainDiv = $("#divMainContainer");
-                
-                $("#divTarget").append(
-                    $('<div class="circleBase type2 clickPoint"></div>')
-                        .css('position', 'absolute')
-                        .css('top',  (testY - (bulletSize/2)) + 'px')
-                        .css('left', (testX - (bulletSize/2)) + 'px')
-                        .css('width', bulletSize + 'px')
-                        .css('height', bulletSize + 'px')
-                );
-                
-                Boom.testIntersect();
+            $("#divTarget").click(function (e) {
+                //Boom.targetClickDBE(e);
+                Boom.targetClickTest(e);
             });
             
             $(".setting").on('blur', Boom.SaveSetting);
+        };
+        
+
+        Boom.targetClickTest = function(e) {
+            if($("#divTarget").hasClass("noTarget")) {
+                return;
+            }
+            
+            var divTarget = $("#divTarget");
+            var x = e.pageX - divTarget.offset().left;
+            var y = e.pageY - divTarget.offset().top;
+            
+            
+            // 1)	klicka på tavlan, rita upp en så stor cirkel som det går, innan vi "slår i" en av micarna (center = klickets koordinater). (-1;-1, -1;1, 1;-1, 1;-1) (hörnen..)
+            // distance to closest corner..
+            var divLeft = 0;
+            var divTop = 0;
+            var height = divTarget.height();
+            var width = divTarget.width();
+            
+            
+            // test draw corners.
+            // top left 
+            Boom.testDrawDot(divLeft, divTop, 10, "type1");
+            // top right
+            Boom.testDrawDot(divLeft + width, divTop, 10, "type1");
+            // bottom left
+            Boom.testDrawDot(divLeft, divTop + height, 10, "type1");
+            // bottom right
+            Boom.testDrawDot(divLeft + width, divTop + height, 10, "type1");
+            
+            var infoList = [];
+            
+            var rTopLeft = Math.sqrt(Math.pow((x - divLeft), 2) + Math.pow((y - divTop), 2));
+            var rTopright = Math.sqrt(Math.pow((x - (divLeft + width)), 2) + Math.pow((y - divTop), 2));
+            var rBottomLeft = Math.sqrt(Math.pow((x - divLeft), 2) + Math.pow((y - (divTop + height)), 2));
+            var rBottomRight = Math.sqrt(Math.pow((x - (divLeft + width)), 2) + Math.pow((y - (divTop + height)), 2));
+            
+            infoList[0] = {'x' : divLeft, 'y' : divTop, 'r' : rTopLeft};
+            infoList[1] = {'x' : divLeft + width, 'y' : divTop, 'r' : rTopright};
+            infoList[2] = {'x' : divLeft, 'y' : divTop + height, 'r' : rBottomLeft};
+            infoList[3] = {'x' : divLeft + width, 'y' : divTop + height, 'r' : rBottomRight};
+            
+            var r = Math.min(rTopLeft, rTopright, rBottomLeft, rBottomRight);
+            
+            
+            Boom.testDrawDot(x, y, 3, "type1"); // klicket..
+            Boom.testDrawDot(x, y, r, "type2");
+            //-1
+            
+            // 2)	Rita upp tre cirklar som utgår ifrån hörnen som inte "träffades" av den första cirkeln. cirklarna ska ha en radie som är avståndet från klicket till respektive cirkels center (ett av hörnen) - den första cirkelns radie
+            
+            $.each(infoList, function(i, obj) {
+                if(obj.r != r){
+                    // rita ut dom andra.
+                    Boom.testDrawDot(obj.x, obj.y, obj.r - r, "type3");
+                }
+            })        
+        };
+        
+        Boom.testDrawDot = function(x, y, r, type){
+          $("#divTarget").append(
+                $('<div class="circleBase ' + type + ' noTarget"></div>')
+                    .css('position', 'absolute')
+                    .css('top',  (y - (r)) + 'px')
+                    .css('left', (x - (r)) + 'px')
+                    .css('width', r*2 + 'px')
+                    .css('height', r*2 + 'px')
+            );  
+        };
+        
+        Boom.targetClickDBE = function(e) {
+          if($("#divTarget").hasClass("noTarget")) {
+                return;
+            }
+            var testY = e.pageY - $("#divTarget").offset().top;
+            var testX = e.pageX - $("#divTarget").offset().left;
+            var mainDiv = $("#divMainContainer");
+
+            $("#divTarget").append(
+                $('<div class="circleBase type2 clickPoint"></div>')
+                    .css('position', 'absolute')
+                    .css('top',  (testY - (bulletSize/2)) + 'px')
+                    .css('left', (testX - (bulletSize/2)) + 'px')
+                    .css('width', bulletSize + 'px')
+                    .css('height', bulletSize + 'px')
+            );
+
+            Boom.testIntersect();  
         };
         
         Boom.testIntersect = function() {
