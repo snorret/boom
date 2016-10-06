@@ -21,3 +21,12 @@
     background: rgba(0,0,255,0.200);
     border: 3px solid blue;
 }
+
+
+
+html {
+  height: 100%;
+}
+body {
+  min-height: 100%;
+}
