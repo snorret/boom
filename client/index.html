@@ -32,43 +32,48 @@
 </head>
     
 <body>
-    <br> <!-- För att notifyer ska få plats utan att lägga sig över meny... -->
-    <div class="container" id="divMainContainer">
+    <!-- <br> --> <!-- För att notifyer ska få plats utan att lägga sig över meny... -->
+    <div class="container" id="divMainContainer" style="max-height:100%; height: 100vh">
         <div id="divHeader" class="header clearfix">
             <nav>
                 <ul class="nav nav-pills pull-right">
                     <li role="presentation" id="menuBoard" class="menu"><a href="#">Board</a></li>
-                    <li role="presentation" id="menuTarget" class="menu active"><a href="#">Target</a></li>
+                    <li role="presentation" id="menuTargetMain" class="menu active"><a href="#">Target</a></li>
                     <li role="presentation" id="menuSettings" class="menu "><a href="#">Settings</a></li>
                 </ul>
             </nav>
-            <h3 class="text-muted">BOOM</h3>
+            <br><br>
+            
             <div id="numberOfClients">Number of clients connected: <span id="numberOfClientsValue">Unknown</span></div>
         </div>
-        <div class="jumbotron" id="divBoard" style="display: none; height: 100%">
-            <h1>Tavla</h1>
-        </div>
-        <div id="divTarget" style="position: relative;">
-<!--            <img id="imgTarget" src="images/target.png" style="display: block;  height:100%"/>-->
-            <img id="imgTarget" class="img-responsive" src="images/target.png"/>
-        </div>
-        
-        <div id="divSettings" style="display: none; height: 100%; text-algin: left">
-            <label>Bullet hole size:</label><br>
-            <input type="text" class="setting numbersOnly" id="iSetting1" placeholder="3.14159265359"> <!-- because Pi!!! -->
-            <br><br>
-            <label>Setting2:</label><br>
-            <input type="text" class="setting" id="iSetting2" placeholder="Enter 'Setting2'">
-            <br><br>
-            <label>Setting3:</label><br>
-            <input type="text" class="setting" id="iSetting3" placeholder="Enter 'Setting3'">
-            <br><br>
-            <label>Setting4:</label><br>
-            <input type="text" class="setting" id="iSetting4" placeholder="Enter 'Setting4'">
-        </div>
+        <div id="divBody">
+            <div class="jumbotron" id="divBoard" style="display: none; height: 100%">
+                <h1>Tavla</h1>
+            </div>
+            <div id="divTargetMain" style="height:100%">
+                <div id="divTarget" style="position: absolute; left: 50%; display:inline-block; border: solid;">
+                    <img id="imgTarget" style="height: 100%;" src="images/target.png"/>
+                </div>
+            </div>
+            <div id="divSettings" style="display: none; height: 100%; text-algin: left">
+                <label>Bullet hole size:</label><br>
+                <input type="text" class="setting numbersOnly" id="iSetting1" placeholder="3.14159265359"> <!-- because Pi!!! -->
+                <br><br>
+                <label>Setting2:</label><br>
+                <input type="text" class="setting" id="iSetting2" placeholder="Enter 'Setting2'">
+                <br><br>
+                <label>Setting3:</label><br>
+                <input type="text" class="setting" id="iSetting3" placeholder="Enter 'Setting3'">
+                <br><br>
+                <label>Setting4:</label><br>
+                <input type="text" class="setting" id="iSetting4" placeholder="Enter 'Setting4'">
+            </div>
 
-        <p class="btn-rensa"><a class="btn btn-lg btn-success" href="#" role="button" id="btnClear">Rensa</a></p>
-        <footer class="footer"> </footer>
+<!--            <p class="btn-rensa"><a class="btn btn-lg btn-success" href="#" role="button" id="btnClear">Rensa</a></p>-->
+        </div>
+        <footer class="footer" id="fotterId">
+            <p class="btn-rensa"><a class="btn btn-lg btn-success" href="#" role="button" id="btnClear">Rensa</a></p>
+        </footer>
     </div>
     <!-- /container -->
     <!-- IE10 viewport hack for Surface/desktop Windows 8 bug -->
@@ -86,7 +91,7 @@
 		Boom.InitSocketIo = function() {
 			var socket = io();
             socket.on('numberOfClients', function(value) {
-                $('#numberOfClientsValue').text(value)
+                //$('#numberOfClientsValue').text(value)
             });
 		};
         
@@ -96,37 +101,9 @@
         var targetWidth = $("#divTarget").width();
         
         Boom.InitView = function() {
-            
-//            $(window).on( "orientationchange", function( event ) {
-//                
-//                var divHeader= $("#divHeader");
-//                var headHeight = divHeader.height();
-//                var headWidth = divHeader.width();
-//                
-//                var window = $(window);
-//                var windowHeight = window.height();
-//                var windowWidth = window.width();
-//                
-////                var testmainHeight = $("#divMainContainer").height();
-////                var testmainWidth = $("#divMainContainer").width();
-//                
-//                var divTarget = $("#imgTarget");
-//                var testtargetHeight = divTarget.height();
-//                var testtargetWidth = divTarget.width();
-//                
-//                
-//                var minHeight = windowHeight-testtargetHeight;
-//                var minWidth = windowWidth-testtargetWidth;
-//                
-//                var min = Math.min(minHeight, minWidth);
-//                
-//                divTarget.attr("max-width", min);
-//                divTarget.attr("max-height", min);
-//                
-//                
-//                //$("#divMainContainer").toggle().toggle();
-//                $(window).toggle('resize');
-//            });
+            $(window).on("orientationchange load resize", function () {
+                Boom.ResizeBodyDiv();
+            });
             
 			// knyt knappar osv..
             $('#btnClear').on('click', Boom.BtnClear);
@@ -140,8 +117,36 @@
             });
             
             $(".setting").on('blur', Boom.SaveSetting);
+            
+            Boom.ResizeBodyDiv();
         };
         
+        Boom.ResizeBodyDiv = function() {
+            var mainHeight = $("#divMainContainer").height();
+            var headHeight = $("#divHeader").height();
+            var fotterHeight = $("#fotterId").height();
+            var testHeight = mainHeight - headHeight - fotterHeight;
+            
+            
+            $("#divBody").css('height',testHeight);
+
+            // sätt img size.. - kolla vad som "slår i" först..
+            var divTargetMain = $("#divTargetMain");
+            var targetMainHeight = divTargetMain.height();
+            var targetMainWidth = divTargetMain.width();
+            
+            if(targetMainHeight < targetMainWidth) {
+                $("#imgTarget").css('width',"auto");
+                $("#imgTarget").css('height',targetMainHeight);
+            }
+            else {
+                $("#imgTarget").css('height',"auto");
+                $("#imgTarget").css('width',targetMainWidth);
+            }
+            
+            // center targetDiv
+            $("#divTarget").css('margin-left',-$("#divTarget").outerWidth()/2);
+        };
 
         Boom.targetClickTest = function(e) {
             if($("#divTarget").hasClass("noTarget")) {
@@ -211,246 +216,246 @@
             );  
         };
         
-        Boom.targetClickDBE = function(e) {
-          if($("#divTarget").hasClass("noTarget")) {
-                return;
-            }
-            var testY = e.pageY - $("#divTarget").offset().top;
-            var testX = e.pageX - $("#divTarget").offset().left;
-            var mainDiv = $("#divMainContainer");
-
-            $("#divTarget").append(
-                $('<div class="circleBase type2 clickPoint"></div>')
-                    .css('position', 'absolute')
-                    .css('top',  (testY - (bulletSize/2)) + 'px')
-                    .css('left', (testX - (bulletSize/2)) + 'px')
-                    .css('width', bulletSize + 'px')
-                    .css('height', bulletSize + 'px')
-            );
-
-            Boom.testIntersect();  
-        };
-        
-        Boom.testIntersect = function() {
-            
-            var points = [];
-            
-            var i = 0;
-            
-            $(".clickPoint").each(function() {
-                points[i] = Boom.testGetDivCenter(this);
-                i++;
-            });
-            
-            // fultest..
-            if(points.length == 3) {
-                var p1 = points[points.length-3];
-                var p2 = points[points.length-2];
-                var p3 = points[points.length-1];
-                
-                //var result = Boom.GetIntersectPoint(p1,p2);
-                
-                var result = Boom.GetIntersectionThreePoints(p1,p2, p3);
-                
-                $("#divTarget").append(
-                    $('<div class="circleBase type1 bulletHole"></div>')
-                        .css('position', 'absolute')
-                        .css('top',  (result.y - (10/2)) + 'px')
-                        .css('left', (result.x - (10/2)) + 'px')
-                        .css('width', result.r + 'px')
-                        .css('height', result.r + 'px')
-                );
-                
-                // Väääääldigt lika.. så behöver inte denna..
+//        Boom.targetClickDBE = function(e) {
+//          if($("#divTarget").hasClass("noTarget")) {
+//                return;
+//            }
+//            var testY = e.pageY - $("#divTarget").offset().top;
+//            var testX = e.pageX - $("#divTarget").offset().left;
+//            var mainDiv = $("#divMainContainer");
+//
+//            $("#divTarget").append(
+//                $('<div class="circleBase type2 clickPoint"></div>')
+//                    .css('position', 'absolute')
+//                    .css('top',  (testY - (bulletSize/2)) + 'px')
+//                    .css('left', (testX - (bulletSize/2)) + 'px')
+//                    .css('width', bulletSize + 'px')
+//                    .css('height', bulletSize + 'px')
+//            );
+//
+//            Boom.testIntersect();  
+//        };
+//        
+//        Boom.testIntersect = function() {
+//            
+//            var points = [];
+//            
+//            var i = 0;
+//            
+//            $(".clickPoint").each(function() {
+//                points[i] = Boom.testGetDivCenter(this);
+//                i++;
+//            });
+//            
+//            // fultest..
+//            if(points.length == 3) {
+//                var p1 = points[points.length-3];
+//                var p2 = points[points.length-2];
+//                var p3 = points[points.length-1];
+//                
+//                //var result = Boom.GetIntersectPoint(p1,p2);
+//                
+//                var result = Boom.GetIntersectionThreePoints(p1,p2, p3);
+//                
 //                $("#divTarget").append(
-//                    $('<div class="circleBase type3 noTarget"></div>')
+//                    $('<div class="circleBase type1 bulletHole"></div>')
 //                        .css('position', 'absolute')
-//                        .css('top',  (result.yi_prime - (10/2)) + 'px')
-//                        .css('left', (result.xi_prime - (10/2)) + 'px')
-//                        .css('width', 10 + 'px')
-//                        .css('height', 10 + 'px')
+//                        .css('top',  (result.y - (10/2)) + 'px')
+//                        .css('left', (result.x - (10/2)) + 'px')
+//                        .css('width', result.r + 'px')
+//                        .css('height', result.r + 'px')
 //                );
-            }
-            else if(points.length > 3) {
-                $(".circleBase").remove();
-            }
-        };
-        
-        Boom.DrawDot = function(result, type){
-            $("#divTarget").append(
-                $('<div class="circleBase type1 noTarget"></div>')
-                    .css('position', 'absolute')
-                    .css('top',  (result.y - (5/2)) + 'px')
-                    .css('left', (result.x - (5/2)) + 'px')
-                    .css('width', 5 + 'px')
-                    .css('height', 5 + 'px')
-            );
-        };
-        
-        Boom.GetIntersectionThreePoints = function(p1, p2, p3) {            
-            var result = Boom.GetIntersectPoint(p1, p2);
-            
-            var newP1 = {'x' : result.xi, 'y' : result.yi, 'r' : 1};
-            //Boom.DrawDot(newP1, "type1");
-            
-            result = Boom.GetIntersectPoint(newP1, p3);
-            
-            var newP2 = {'x' : result.xi, 'y' : result.yi, 'r' : 1};
-            //Boom.DrawDot(newP2, "type1");
-            
-            result = Boom.GetIntersectPoint(newP1, newP2);
-            
-            var newP3 = {'x' : result.xi, 'y' : result.yi, 'r' : 1};
-            //Boom.DrawDot(newP3, "type1");
-            
-            // sista.. jag lovar.
-            result = Boom.GetIntersectPoint(newP3, newP2);
-            
-            var yey = {'x' : result.xi, 'y' : result.yi, 'r' : (bulletSize / 2)};
-            
-            return yey;
-        };
-        
-        Boom.GetIntersectPoint = function(p1, p2) {
-            var p1r = p1.r;
-            var p2r = p2.r;
-            
-            var result = false;
-            do {
-                p1r++;
-                p2r++;
-                result = Boom.TestIntersection(p1.x, p1.y, p1r, p2.x, p2.y, p2r);
-            }while(!result)
-
-            result = false;
-            do {
-                p1r -= 0.0001;
-                p2r -= 0.0001;
-                result = Boom.TestIntersection(p1.x, p1.y, p1r, p2.x, p2.y, p2r);
-            }while(result)
-                
-            p1r += 0.0001;
-            p2r += 0.0001;
-
-            return Boom.TestIntersection(p1.x, p1.y, p1r, p2.x, p2.y, p2r);
-        };
-        
-        Boom.TestIntersection = function(x0, y0, r0, x1, y1, r1) {
-            var a, dx, dy, d, h, rx, ry;
-            var x2, y2;
-
-            /* dx and dy are the vertical and horizontal distances between
-             * the circle centers.
-             */
-            dx = x1 - x0;
-            dy = y1 - y0;
-
-            /* Determine the straight-line distance between the centers. */
-            d = Math.sqrt((dy*dy) + (dx*dx));
-
-            /* Check for solvability. */
-            if (d > (r0 + r1)) {
-                /* no solution. circles do not intersect. */
-                return false;
-            }
-            if (d < Math.abs(r0 - r1)) {
-                /* no solution. one circle is contained in the other */
-                return false;
-            }
-
-            /* 'point 2' is the point where the line through the circle
-             * intersection points crosses the line between the circle
-             * centers.  
-             */
-
-            /* Determine the distance from point 0 to point 2. */
-            a = ((r0*r0) - (r1*r1) + (d*d)) / (2.0 * d) ;
-
-            /* Determine the coordinates of point 2. */
-            x2 = x0 + (dx * a/d);
-            y2 = y0 + (dy * a/d);
-
-            /* Determine the distance from point 2 to either of the
-             * intersection points.
-             */
-            h = Math.sqrt((r0*r0) - (a*a));
-
-            /* Now determine the offsets of the intersection points from
-             * point 2.
-             */
-            rx = -dy * (h/d);
-            ry = dx * (h/d);
-
-            /* Determine the absolute intersection points. */
-            var xi = x2 + rx;
-            var xi_prime = x2 - rx;
-            var yi = y2 + ry;
-            var yi_prime = y2 - ry;
-
-            //return [xi, xi_prime, yi, yi_prime];
-            
-            return {'xi' : xi, 'xi_prime' : xi_prime, 'yi' : yi, 'yi_prime': yi_prime};
-            
-        };
-        
-        Boom.TestIntersection = function(x0, y0, r0, x1, y1, r1, x2, y2, r2) {
-            var a, dx, dy, d, h, rx, ry;
-            var x2, y2;
-
-            /* dx and dy are the vertical and horizontal distances between
-             * the circle centers.
-             */
-            dx = x1 - x0;
-            dy = y1 - y0;
-
-            /* Determine the straight-line distance between the centers. */
-            d = Math.sqrt((dy*dy) + (dx*dx));
-
-            /* Check for solvability. */
-            if (d > (r0 + r1)) {
-                /* no solution. circles do not intersect. */
-                return false;
-            }
-            if (d < Math.abs(r0 - r1)) {
-                /* no solution. one circle is contained in the other */
-                return false;
-            }
-
-            /* 'point 2' is the point where the line through the circle
-             * intersection points crosses the line between the circle
-             * centers.  
-             */
-
-            /* Determine the distance from point 0 to point 2. */
-            a = ((r0*r0) - (r1*r1) + (d*d)) / (2.0 * d) ;
-
-            /* Determine the coordinates of point 2. */
-            x2 = x0 + (dx * a/d);
-            y2 = y0 + (dy * a/d);
-
-            /* Determine the distance from point 2 to either of the
-             * intersection points.
-             */
-            h = Math.sqrt((r0*r0) - (a*a));
-
-            /* Now determine the offsets of the intersection points from
-             * point 2.
-             */
-            rx = -dy * (h/d);
-            ry = dx * (h/d);
-
-            /* Determine the absolute intersection points. */
-            var xi = x2 + rx;
-            var xi_prime = x2 - rx;
-            var yi = y2 + ry;
-            var yi_prime = y2 - ry;
-
-            //return [xi, xi_prime, yi, yi_prime];
-            
-            return {'xi' : xi, 'xi_prime' : xi_prime, 'yi' : yi, 'yi_prime': yi_prime};
-            
-        };
-        
+//                
+//                // Väääääldigt lika.. så behöver inte denna..
+////                $("#divTarget").append(
+////                    $('<div class="circleBase type3 noTarget"></div>')
+////                        .css('position', 'absolute')
+////                        .css('top',  (result.yi_prime - (10/2)) + 'px')
+////                        .css('left', (result.xi_prime - (10/2)) + 'px')
+////                        .css('width', 10 + 'px')
+////                        .css('height', 10 + 'px')
+////                );
+//            }
+//            else if(points.length > 3) {
+//                $(".circleBase").remove();
+//            }
+//        };
+//        
+//        Boom.DrawDot = function(result, type){
+//            $("#divTarget").append(
+//                $('<div class="circleBase type1 noTarget"></div>')
+//                    .css('position', 'absolute')
+//                    .css('top',  (result.y - (5/2)) + 'px')
+//                    .css('left', (result.x - (5/2)) + 'px')
+//                    .css('width', 5 + 'px')
+//                    .css('height', 5 + 'px')
+//            );
+//        };
+//        
+//        Boom.GetIntersectionThreePoints = function(p1, p2, p3) {            
+//            var result = Boom.GetIntersectPoint(p1, p2);
+//            
+//            var newP1 = {'x' : result.xi, 'y' : result.yi, 'r' : 1};
+//            //Boom.DrawDot(newP1, "type1");
+//            
+//            result = Boom.GetIntersectPoint(newP1, p3);
+//            
+//            var newP2 = {'x' : result.xi, 'y' : result.yi, 'r' : 1};
+//            //Boom.DrawDot(newP2, "type1");
+//            
+//            result = Boom.GetIntersectPoint(newP1, newP2);
+//            
+//            var newP3 = {'x' : result.xi, 'y' : result.yi, 'r' : 1};
+//            //Boom.DrawDot(newP3, "type1");
+//            
+//            // sista.. jag lovar.
+//            result = Boom.GetIntersectPoint(newP3, newP2);
+//            
+//            var yey = {'x' : result.xi, 'y' : result.yi, 'r' : (bulletSize / 2)};
+//            
+//            return yey;
+//        };
+//        
+//        Boom.GetIntersectPoint = function(p1, p2) {
+//            var p1r = p1.r;
+//            var p2r = p2.r;
+//            
+//            var result = false;
+//            do {
+//                p1r++;
+//                p2r++;
+//                result = Boom.TestIntersection(p1.x, p1.y, p1r, p2.x, p2.y, p2r);
+//            }while(!result)
+//
+//            result = false;
+//            do {
+//                p1r -= 0.0001;
+//                p2r -= 0.0001;
+//                result = Boom.TestIntersection(p1.x, p1.y, p1r, p2.x, p2.y, p2r);
+//            }while(result)
+//                
+//            p1r += 0.0001;
+//            p2r += 0.0001;
+//
+//            return Boom.TestIntersection(p1.x, p1.y, p1r, p2.x, p2.y, p2r);
+//        };
+//        
+//        Boom.TestIntersection = function(x0, y0, r0, x1, y1, r1) {
+//            var a, dx, dy, d, h, rx, ry;
+//            var x2, y2;
+//
+//            /* dx and dy are the vertical and horizontal distances between
+//             * the circle centers.
+//             */
+//            dx = x1 - x0;
+//            dy = y1 - y0;
+//
+//            /* Determine the straight-line distance between the centers. */
+//            d = Math.sqrt((dy*dy) + (dx*dx));
+//
+//            /* Check for solvability. */
+//            if (d > (r0 + r1)) {
+//                /* no solution. circles do not intersect. */
+//                return false;
+//            }
+//            if (d < Math.abs(r0 - r1)) {
+//                /* no solution. one circle is contained in the other */
+//                return false;
+//            }
+//
+//            /* 'point 2' is the point where the line through the circle
+//             * intersection points crosses the line between the circle
+//             * centers.  
+//             */
+//
+//            /* Determine the distance from point 0 to point 2. */
+//            a = ((r0*r0) - (r1*r1) + (d*d)) / (2.0 * d) ;
+//
+//            /* Determine the coordinates of point 2. */
+//            x2 = x0 + (dx * a/d);
+//            y2 = y0 + (dy * a/d);
+//
+//            /* Determine the distance from point 2 to either of the
+//             * intersection points.
+//             */
+//            h = Math.sqrt((r0*r0) - (a*a));
+//
+//            /* Now determine the offsets of the intersection points from
+//             * point 2.
+//             */
+//            rx = -dy * (h/d);
+//            ry = dx * (h/d);
+//
+//            /* Determine the absolute intersection points. */
+//            var xi = x2 + rx;
+//            var xi_prime = x2 - rx;
+//            var yi = y2 + ry;
+//            var yi_prime = y2 - ry;
+//
+//            //return [xi, xi_prime, yi, yi_prime];
+//            
+//            return {'xi' : xi, 'xi_prime' : xi_prime, 'yi' : yi, 'yi_prime': yi_prime};
+//            
+//        };
+//        
+//        Boom.TestIntersection = function(x0, y0, r0, x1, y1, r1, x2, y2, r2) {
+//            var a, dx, dy, d, h, rx, ry;
+//            var x2, y2;
+//
+//            /* dx and dy are the vertical and horizontal distances between
+//             * the circle centers.
+//             */
+//            dx = x1 - x0;
+//            dy = y1 - y0;
+//
+//            /* Determine the straight-line distance between the centers. */
+//            d = Math.sqrt((dy*dy) + (dx*dx));
+//
+//            /* Check for solvability. */
+//            if (d > (r0 + r1)) {
+//                /* no solution. circles do not intersect. */
+//                return false;
+//            }
+//            if (d < Math.abs(r0 - r1)) {
+//                /* no solution. one circle is contained in the other */
+//                return false;
+//            }
+//
+//            /* 'point 2' is the point where the line through the circle
+//             * intersection points crosses the line between the circle
+//             * centers.  
+//             */
+//
+//            /* Determine the distance from point 0 to point 2. */
+//            a = ((r0*r0) - (r1*r1) + (d*d)) / (2.0 * d) ;
+//
+//            /* Determine the coordinates of point 2. */
+//            x2 = x0 + (dx * a/d);
+//            y2 = y0 + (dy * a/d);
+//
+//            /* Determine the distance from point 2 to either of the
+//             * intersection points.
+//             */
+//            h = Math.sqrt((r0*r0) - (a*a));
+//
+//            /* Now determine the offsets of the intersection points from
+//             * point 2.
+//             */
+//            rx = -dy * (h/d);
+//            ry = dx * (h/d);
+//
+//            /* Determine the absolute intersection points. */
+//            var xi = x2 + rx;
+//            var xi_prime = x2 - rx;
+//            var yi = y2 + ry;
+//            var yi_prime = y2 - ry;
+//
+//            //return [xi, xi_prime, yi, yi_prime];
+//            
+//            return {'xi' : xi, 'xi_prime' : xi_prime, 'yi' : yi, 'yi_prime': yi_prime};
+//            
+//        };
+//        
         Boom.testGetDivCenter = function(div) {
             var radius = 1; // cirkel..
 
@@ -507,7 +512,12 @@
                                 .css("top", "0px")
                                 .css("left", left+ "px")
                                 .css('width', '100%')
-                                .css('height', '39px');
+                                .css('height', '17px');
+            
+            notifyer.click(function (e) {
+                notifyer.remove();
+            });
+            
 
             notifyer.hide().appendTo(mainDiv).fadeIn().delay(delay).fadeOut();
         }
@@ -558,6 +568,12 @@
             return this.css('display','none');
         };
         
+        jQuery.fn.center = function () {
+            //this.css("position","absolute");
+            //this.css("top", Math.max(0, (($(window).height() - $(this).outerHeight()) / 2) + $(window).scrollTop()) + "px");
+            this.css("left", Math.max(0, (($(window).width() - $(this).outerWidth()) / 2)) + "px");
+            return this;
+        }
         
     }(Boom));
     
