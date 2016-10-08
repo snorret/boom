@@ -88,17 +88,38 @@
         var bulletSizeMax = 100;
         var bulletSizeMin = 10;
         
+        var socket;
+        
+        eventTypes = {
+            setting : "setting",
+            targetData : "targetData"
+        }
+        
 		Boom.InitSocketIo = function() {
-			var socket = io();
+			socket = io();
             socket.on('numberOfClients', function(value) {
-                //$('#numberOfClientsValue').text(value)
+                $('#numberOfClientsValue').text(value)
             });
+            
+            
+            
+            socket.emit('clientEvent', 'testMsg|hejsan lille david!');
+            
+            socket.on('testerEvent', function(data){
+                if(data && data.message){
+                    alert(data.message);
+                }
+            });
+            
 		};
         
-		var mainHeight = $("#divMainContainer").height();
-        var mainWidth = $("#divMainContainer").width();
-        var targetHeight = $("#divTarget").height();
-        var targetWidth = $("#divTarget").width();
+        Boom.SendMessage = function(type, value) {
+            if(socket && eventTypes[type] && value) {
+                socket.emit('clientEvent', type + "|" + value);
+            }
+        };
+        
+ 
         
         Boom.InitView = function() {
             $(window).on("orientationchange load resize", function () {
@@ -125,7 +146,7 @@
             var mainHeight = $("#divMainContainer").height();
             var headHeight = $("#divHeader").height();
             var fotterHeight = $("#fotterId").height();
-            var testHeight = mainHeight - headHeight - fotterHeight;
+            var testHeight = mainHeight - headHeight - fotterHeight - 12;
             
             
             $("#divBody").css('height',testHeight);
@@ -200,11 +221,21 @@
             // 2)	Rita upp tre cirklar som utgår ifrån hörnen som inte "träffades" av den första cirkeln. cirklarna ska ha en radie som är avståndet från klicket till respektive cirkels center (ett av hörnen) - den första cirkelns radie
             
             $.each(infoList, function(i, obj) {
-                if(obj.r != r){
+                if(obj.r != r) {
                     // rita ut dom andra.
                     Boom.testDrawDot(obj.x, obj.y, obj.r - r, "type3");
                 }
-            })        
+            })
+            
+            // Send test data to server
+            
+            // avståndet / divTarget.width... (alltid samma som height)
+            var testItem0 = r == rTopLeft ? 0 : (rTopLeft/ width);
+            var testItem1 = r == rTopright ? 0 : (rTopright/ width);
+            var testItem2 = r == rBottomLeft ? 0 : (rBottomLeft / width);
+            var testItem3 = r == rBottomRight ? 0 : (rBottomRight/ width);
+            
+            Boom.SendMessage(eventTypes.targetData, "0:"+testItem0+"#1:"+testItem1+"#2:"+testItem2+"#3:"+testItem3);
         };
         
         Boom.testDrawDot = function(x, y, r, type){
@@ -482,13 +513,16 @@
                         if (tempBulletSize <= bulletSizeMax && tempBulletSize >= bulletSizeMin){
                             bulletSize = tempBulletSize;
                             Boom.Notify(notifyType.Success, "Bullet size changed to: " + elemTarget.val());
+                            
+                            Boom.SendMessage(eventTypes.setting, "bulletSize set to " + bulletSize);
+                            
                         }
                         else {
                             Boom.Notify(notifyType.Info, "Bullet size has to be between " + bulletSizeMin + " and " + bulletSizeMax);
                         }
                     }
                     else {
-                        Boom.Notify(notifyType.Error, "Failed to update bullet size: " + elemTarget.val() + " is not numeric", 2000);
+                        Boom.Notify(notifyType.Error, "Failed to update bullet size: input is not numeric", 2000);
                     }
                     
                     elemTarget.attr("placeholder", bulletSize);
