@@ -130,22 +130,24 @@
             
             $("#divBody").css('height',testHeight);
 
-            // sätt img size.. - kolla vad som "slår i" först..
-            var divTargetMain = $("#divTargetMain");
-            var targetMainHeight = divTargetMain.height();
-            var targetMainWidth = divTargetMain.width();
-            
-            if(targetMainHeight < targetMainWidth) {
-                $("#imgTarget").css('width',"auto");
-                $("#imgTarget").css('height',targetMainHeight);
+            if($("#menuTargetMain").hasClass("active")) {
+                // sätt img size.. - kolla vad som "slår i" först..
+                var divTargetMain = $("#divTargetMain");
+                var targetMainHeight = divTargetMain.height();
+                var targetMainWidth = divTargetMain.width();
+
+                if(targetMainHeight < targetMainWidth) {
+                    $("#imgTarget").css('width',"auto");
+                    $("#imgTarget").css('height',targetMainHeight);
+                }
+                else {
+                    $("#imgTarget").css('height',"auto");
+                    $("#imgTarget").css('width',targetMainWidth);
+                }
+
+                // center targetDiv
+                $("#divTarget").css('margin-left',-$("#divTarget").outerWidth()/2);
             }
-            else {
-                $("#imgTarget").css('height',"auto");
-                $("#imgTarget").css('width',targetMainWidth);
-            }
-            
-            // center targetDiv
-            $("#divTarget").css('margin-left',-$("#divTarget").outerWidth()/2);
         };
 
         Boom.targetClickTest = function(e) {
@@ -541,9 +543,9 @@
         
         Boom.ActivateDiv = function(item, div) {
             $(item).addClass( "active" );
-            
             if(div){
                 div.visible();
+                Boom.ResizeBodyDiv();
             }
         }
         
