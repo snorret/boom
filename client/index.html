@@ -101,16 +101,11 @@
                 $('#numberOfClientsValue').text(value)
             });
             
-            
-            
-            socket.emit('clientEvent', 'testMsg|hejsan lille david!');
-            
             socket.on('testerEvent', function(data){
                 if(data && data.message){
                     alert(data.message);
                 }
             });
-            
 		};
         
         Boom.SendMessage = function(type, value) {
@@ -230,10 +225,10 @@
             // Send test data to server
             
             // avståndet / divTarget.width... (alltid samma som height)
-            var testItem0 = r == rTopLeft ? 0 : (rTopLeft/ width);
-            var testItem1 = r == rTopright ? 0 : (rTopright/ width);
-            var testItem2 = r == rBottomLeft ? 0 : (rBottomLeft / width);
-            var testItem3 = r == rBottomRight ? 0 : (rBottomRight/ width);
+            var testItem0 = r == rTopLeft ? 0 : (rTopLeft / 2 / width);
+            var testItem1 = r == rTopright ? 0 : (rTopright / 2 / width);
+            var testItem2 = r == rBottomLeft ? 0 : (rBottomLeft / 2 / width);
+            var testItem3 = r == rBottomRight ? 0 : (rBottomRight / 2/ width);
             
             Boom.SendMessage(eventTypes.targetData, "0:"+testItem0+"#1:"+testItem1+"#2:"+testItem2+"#3:"+testItem3);
         };
