@@ -88,6 +88,10 @@
         var bulletSizeMax = 100;
         var bulletSizeMin = 10;
         
+        var hits = []; // aktuella träffars position (x,y) uträknat beroende på storleken av tavlan..
+        
+        var pointsFromSrv = [];
+        
         var socket;
         
         eventTypes = {
@@ -101,12 +105,133 @@
                 $('#numberOfClientsValue').text(value)
             });
             
-            socket.on('testerEvent', function(data){
-                if(data && data.message){
-                    alert(data.message);
+            socket.on('testerEvent', function(data) {
+                if(data && data.message) {
+                    // kolla så att det är ett targetData-event..
+                    
+                    var msgs = data.message.split('#');
+                    
+                    var points = [];
+                    $.each(msgs, function(i, d) {
+                        var split = d.split(':');
+                        points[points.length] = { 'mic': split[0], 'val' : split[1] };
+                    })
+                    
+                    pointsFromSrv[pointsFromSrv.length] = points;
+                    
+                    Boom.drawSrvResult();
                 }
             });
 		};
+        
+        Boom.drawSrvResult = function() {
+            //pointsFromSrv..
+            
+            var divTarget = $("#divTarget");
+            
+            var p0, p1, p2, p3;
+            $.each(pointsFromSrv, function(i, d) {
+                p0 = d[0];
+                p1 = d[1];
+                p2 = d[2];
+                p3 = d[3];
+                
+                // rita inte ut pX med "0"
+                
+                var drawPoints = [];
+                
+                var missingMic;
+                
+                $.each(d, function(i, p) {
+                    if(p.val != 0) {
+                        // rita ut.
+                        var width = divTarget.width();
+                        var r = p.val * width;
+                        
+                        drawPoints[drawPoints.length] = { 'mic' : p.mic, 'r' : r };
+                    }
+                    else {
+                        missingMic = p.mic;
+                    }
+                })
+                
+                var intersectPoints = [];
+                
+                var divLeft = 0;
+                var divTop = 0;
+                var height = divTarget.height();
+                var width = divTarget.width();
+                
+                // test draw corners. + add intersectPoints..
+                $.each(drawPoints, function(i, dp) {
+                    
+                    if(dp.mic == 0) {
+                        // top left 
+                        //Boom.testDrawDot(divLeft, divTop, dp.r, "type1");
+                        
+                        intersectPoints[intersectPoints.length] = {'x' : divLeft, 'y' : divTop, 'r' : dp.r};
+                    }
+                    else if(dp.mic == 1) {
+                        // top right
+                        //Boom.testDrawDot(divLeft + width, divTop, dp.r, "type1");
+                        
+                        intersectPoints[intersectPoints.length] = {'x' : divLeft + width, 'y' : divTop, 'r' : dp.r};
+                    }
+                    else if(dp.mic == 2) {
+                        // bottom left
+                        //Boom.testDrawDot(divLeft, divTop + height, dp.r, "type1");
+                        
+                        intersectPoints[intersectPoints.length] = {'x' : divLeft, 'y' : divTop + height, 'r' : dp.r};
+                    }
+                    else if(dp.mic == 3) {
+                        // bottom right
+                        //Boom.testDrawDot(divLeft + width, divTop + height, dp.r, "type1");
+                        
+                        intersectPoints[intersectPoints.length] = {'x' : divLeft + width, 'y' : divTop + height, 'r' : dp.r};
+                    }
+                })
+                
+                // vilka ska vi börja testa? - diagonala punkter.. men orkar inte tänka ut hur jag ska veta vilka det är nu.. Kör med p0 och p1
+
+                if(intersectPoints.length == 3) {
+                    
+                    var p0, p1, p2;
+                    
+                    // snygga till när du är klar i skallen..!
+                    if(missingMic == "0") {
+                        // 1,2
+                        p0 = intersectPoints[0];
+                        p1 = intersectPoints[1];
+                        
+                        p2 = intersectPoints[2];
+                    }
+                    else if(missingMic == "1") {
+                        // 0,3
+                        p0 = intersectPoints[0];
+                        p1 = intersectPoints[2];
+                        
+                        p2 = intersectPoints[1];
+                    }
+                    else if(missingMic == "2") {
+                        //1,2
+                        p0 = intersectPoints[0];
+                        p1 = intersectPoints[2];
+                        
+                        p2 = intersectPoints[1];
+                    }
+                    else if(missingMic == "3") {
+                        //0,3
+                        p0 = intersectPoints[1];
+                        p1 = intersectPoints[2];
+                        
+                        p2 = intersectPoints[0];
+                    }
+                    
+                    Boom.GetIntersectDreePoints(p0, p1, p2);
+                }
+            })
+        };
+        
         
         Boom.SendMessage = function(type, value) {
             if(socket && eventTypes[type] && value) {
@@ -114,11 +239,14 @@
             }
         };
         
- 
-        
         Boom.InitView = function() {
-            $(window).on("orientationchange load resize", function () {
+            $(window).on("load resize", function () {
                 Boom.ResizeBodyDiv();
+                
+                if(hits.length > 0) {
+                    Boom.redrawTestHits();
+                    Boom.drawSrvResult();
+                }
             });
             
 			// knyt knappar osv..
@@ -127,8 +255,7 @@
             // meny..
             $('.menu').on('click', Boom.MenuClick);
 
-            $("#divTarget").click(function (e) {
-                //Boom.targetClickDBE(e);
+            $("#imgTarget").click(function (e) {
                 Boom.targetClickTest(e);
             });
             
@@ -166,33 +293,55 @@
             }
         };
 
+        Boom.redrawTestHits = function() {
+            
+            $(".circleBase").remove();
+            
+            var divTarget = $("#divTarget");
+            var width = divTarget.width();
+            
+            $.each(hits, function(i, hit) {
+                
+                var x = hit.x * width;
+                var y = hit.y * width;
+                
+                var infoList = Boom.calculateHitAndDraw(x, y);
+            })
+        };
+        
         Boom.targetClickTest = function(e) {
-            if($("#divTarget").hasClass("noTarget")) {
+            if($("#divTarget").hasClass("noTarget")) { // this? ist?
                 return;
             }
             
+            //var result = Boom.calculateHitAndDraw(e.pageX, e.pageY);
+            var result = Boom.calculateHitAndDraw(e.offsetX, e.offsetY);
+            
+            var infoList = result.infoList;
+            var r = result.r;
+            var width = result.width;
+            
+            var testItem0 = r == infoList[0].r ? 0 : ((infoList[0].r - r) / width);
+            var testItem1 = r == infoList[1].r ? 0 : ((infoList[1].r - r) / width);
+            var testItem2 = r == infoList[2].r ? 0 : ((infoList[2].r - r) / width);
+            var testItem3 = r == infoList[3].r ? 0 : ((infoList[3].r - r) / width);
+            
+            Boom.SendMessage(eventTypes.targetData, "0:"+testItem0+"#1:"+testItem1+"#2:"+testItem2+"#3:"+testItem3);
+            
             var divTarget = $("#divTarget");
-            var x = e.pageX - divTarget.offset().left;
-            var y = e.pageY - divTarget.offset().top;
+            var item = Boom.getHitRelativeCoordinates( e.offsetX, e.offsetY, divTarget.width());
+
+            hits[hits.length] = item;
+        };
+        
+        Boom.calculateHitAndDraw = function(x, y)
+        {
+            var divTarget = $("#divTarget");
             
-            
-            // 1)	klicka på tavlan, rita upp en så stor cirkel som det går, innan vi "slår i" en av micarna (center = klickets koordinater). (-1;-1, -1;1, 1;-1, 1;-1) (hörnen..)
-            // distance to closest corner..
             var divLeft = 0;
             var divTop = 0;
             var height = divTarget.height();
             var width = divTarget.width();
-            
-            
-            // test draw corners.
-            // top left 
-            Boom.testDrawDot(divLeft, divTop, 10, "type1");
-            // top right
-            Boom.testDrawDot(divLeft + width, divTop, 10, "type1");
-            // bottom left
-            Boom.testDrawDot(divLeft, divTop + height, 10, "type1");
-            // bottom right
-            Boom.testDrawDot(divLeft + width, divTop + height, 10, "type1");
             
             var infoList = [];
             
@@ -209,29 +358,20 @@
             var r = Math.min(rTopLeft, rTopright, rBottomLeft, rBottomRight);
             
             
-            Boom.testDrawDot(x, y, 3, "type1"); // klicket..
-            Boom.testDrawDot(x, y, r, "type2");
-            //-1
+            Boom.testDrawDot(x, y, 25, "type1"); // klicket..
             
-            // 2)	Rita upp tre cirklar som utgår ifrån hörnen som inte "träffades" av den första cirkeln. cirklarna ska ha en radie som är avståndet från klicket till respektive cirkels center (ett av hörnen) - den första cirkelns radie
-            
-            $.each(infoList, function(i, obj) {
-                if(obj.r != r) {
-                    // rita ut dom andra.
-                    Boom.testDrawDot(obj.x, obj.y, obj.r - r, "type3");
-                }
-            })
-            
-            // Send test data to server
-            
-            // avståndet / divTarget.width... (alltid samma som height)
-            var testItem0 = r == rTopLeft ? 0 : (rTopLeft / 2 / width);
-            var testItem1 = r == rTopright ? 0 : (rTopright / 2 / width);
-            var testItem2 = r == rBottomLeft ? 0 : (rBottomLeft / 2 / width);
-            var testItem3 = r == rBottomRight ? 0 : (rBottomRight / 2/ width);
-            
-            Boom.SendMessage(eventTypes.targetData, "0:"+testItem0+"#1:"+testItem1+"#2:"+testItem2+"#3:"+testItem3);
+            return { 'infoList' : infoList, 'r' : r, 'width' : width };
         };
+        
+
+        Boom.getHitRelativeCoordinates = function(x, y, targetWidth) {
+            var newX = x / targetWidth;
+            var newY = y / targetWidth;
+            
+            return {'x' : newX, 'y' : newY};
+        };
+        
+        
         
         Boom.testDrawDot = function(x, y, r, type){
           $("#divTarget").append(
@@ -244,246 +384,167 @@
             );  
         };
         
-//        Boom.targetClickDBE = function(e) {
-//          if($("#divTarget").hasClass("noTarget")) {
-//                return;
-//            }
-//            var testY = e.pageY - $("#divTarget").offset().top;
-//            var testX = e.pageX - $("#divTarget").offset().left;
-//            var mainDiv = $("#divMainContainer");
-//
-//            $("#divTarget").append(
-//                $('<div class="circleBase type2 clickPoint"></div>')
-//                    .css('position', 'absolute')
-//                    .css('top',  (testY - (bulletSize/2)) + 'px')
-//                    .css('left', (testX - (bulletSize/2)) + 'px')
-//                    .css('width', bulletSize + 'px')
-//                    .css('height', bulletSize + 'px')
-//            );
-//
-//            Boom.testIntersect();  
-//        };
-//        
-//        Boom.testIntersect = function() {
-//            
-//            var points = [];
-//            
-//            var i = 0;
-//            
-//            $(".clickPoint").each(function() {
-//                points[i] = Boom.testGetDivCenter(this);
-//                i++;
-//            });
-//            
-//            // fultest..
-//            if(points.length == 3) {
-//                var p1 = points[points.length-3];
-//                var p2 = points[points.length-2];
-//                var p3 = points[points.length-1];
-//                
-//                //var result = Boom.GetIntersectPoint(p1,p2);
-//                
-//                var result = Boom.GetIntersectionThreePoints(p1,p2, p3);
-//                
-//                $("#divTarget").append(
-//                    $('<div class="circleBase type1 bulletHole"></div>')
-//                        .css('position', 'absolute')
-//                        .css('top',  (result.y - (10/2)) + 'px')
-//                        .css('left', (result.x - (10/2)) + 'px')
-//                        .css('width', result.r + 'px')
-//                        .css('height', result.r + 'px')
-//                );
-//                
-//                // Väääääldigt lika.. så behöver inte denna..
-////                $("#divTarget").append(
-////                    $('<div class="circleBase type3 noTarget"></div>')
-////                        .css('position', 'absolute')
-////                        .css('top',  (result.yi_prime - (10/2)) + 'px')
-////                        .css('left', (result.xi_prime - (10/2)) + 'px')
-////                        .css('width', 10 + 'px')
-////                        .css('height', 10 + 'px')
-////                );
-//            }
-//            else if(points.length > 3) {
-//                $(".circleBase").remove();
-//            }
-//        };
-//        
-//        Boom.DrawDot = function(result, type){
-//            $("#divTarget").append(
-//                $('<div class="circleBase type1 noTarget"></div>')
-//                    .css('position', 'absolute')
-//                    .css('top',  (result.y - (5/2)) + 'px')
-//                    .css('left', (result.x - (5/2)) + 'px')
-//                    .css('width', 5 + 'px')
-//                    .css('height', 5 + 'px')
-//            );
-//        };
-//        
-//        Boom.GetIntersectionThreePoints = function(p1, p2, p3) {            
-//            var result = Boom.GetIntersectPoint(p1, p2);
-//            
-//            var newP1 = {'x' : result.xi, 'y' : result.yi, 'r' : 1};
-//            //Boom.DrawDot(newP1, "type1");
-//            
-//            result = Boom.GetIntersectPoint(newP1, p3);
-//            
-//            var newP2 = {'x' : result.xi, 'y' : result.yi, 'r' : 1};
-//            //Boom.DrawDot(newP2, "type1");
-//            
-//            result = Boom.GetIntersectPoint(newP1, newP2);
-//            
-//            var newP3 = {'x' : result.xi, 'y' : result.yi, 'r' : 1};
-//            //Boom.DrawDot(newP3, "type1");
-//            
-//            // sista.. jag lovar.
-//            result = Boom.GetIntersectPoint(newP3, newP2);
-//            
-//            var yey = {'x' : result.xi, 'y' : result.yi, 'r' : (bulletSize / 2)};
-//            
-//            return yey;
-//        };
-//        
-//        Boom.GetIntersectPoint = function(p1, p2) {
-//            var p1r = p1.r;
-//            var p2r = p2.r;
-//            
-//            var result = false;
-//            do {
-//                p1r++;
-//                p2r++;
-//                result = Boom.TestIntersection(p1.x, p1.y, p1r, p2.x, p2.y, p2r);
-//            }while(!result)
-//
-//            result = false;
-//            do {
-//                p1r -= 0.0001;
-//                p2r -= 0.0001;
-//                result = Boom.TestIntersection(p1.x, p1.y, p1r, p2.x, p2.y, p2r);
-//            }while(result)
-//                
-//            p1r += 0.0001;
-//            p2r += 0.0001;
-//
-//            return Boom.TestIntersection(p1.x, p1.y, p1r, p2.x, p2.y, p2r);
-//        };
-//        
-//        Boom.TestIntersection = function(x0, y0, r0, x1, y1, r1) {
-//            var a, dx, dy, d, h, rx, ry;
-//            var x2, y2;
-//
-//            /* dx and dy are the vertical and horizontal distances between
-//             * the circle centers.
-//             */
-//            dx = x1 - x0;
-//            dy = y1 - y0;
-//
-//            /* Determine the straight-line distance between the centers. */
-//            d = Math.sqrt((dy*dy) + (dx*dx));
-//
-//            /* Check for solvability. */
-//            if (d > (r0 + r1)) {
-//                /* no solution. circles do not intersect. */
-//                return false;
-//            }
-//            if (d < Math.abs(r0 - r1)) {
-//                /* no solution. one circle is contained in the other */
-//                return false;
-//            }
-//
-//            /* 'point 2' is the point where the line through the circle
-//             * intersection points crosses the line between the circle
-//             * centers.  
-//             */
-//
-//            /* Determine the distance from point 0 to point 2. */
-//            a = ((r0*r0) - (r1*r1) + (d*d)) / (2.0 * d) ;
-//
-//            /* Determine the coordinates of point 2. */
-//            x2 = x0 + (dx * a/d);
-//            y2 = y0 + (dy * a/d);
-//
-//            /* Determine the distance from point 2 to either of the
-//             * intersection points.
-//             */
-//            h = Math.sqrt((r0*r0) - (a*a));
-//
-//            /* Now determine the offsets of the intersection points from
-//             * point 2.
-//             */
-//            rx = -dy * (h/d);
-//            ry = dx * (h/d);
-//
-//            /* Determine the absolute intersection points. */
-//            var xi = x2 + rx;
-//            var xi_prime = x2 - rx;
-//            var yi = y2 + ry;
-//            var yi_prime = y2 - ry;
-//
-//            //return [xi, xi_prime, yi, yi_prime];
-//            
-//            return {'xi' : xi, 'xi_prime' : xi_prime, 'yi' : yi, 'yi_prime': yi_prime};
-//            
-//        };
-//        
-//        Boom.TestIntersection = function(x0, y0, r0, x1, y1, r1, x2, y2, r2) {
-//            var a, dx, dy, d, h, rx, ry;
-//            var x2, y2;
-//
-//            /* dx and dy are the vertical and horizontal distances between
-//             * the circle centers.
-//             */
-//            dx = x1 - x0;
-//            dy = y1 - y0;
-//
-//            /* Determine the straight-line distance between the centers. */
-//            d = Math.sqrt((dy*dy) + (dx*dx));
-//
-//            /* Check for solvability. */
-//            if (d > (r0 + r1)) {
-//                /* no solution. circles do not intersect. */
-//                return false;
-//            }
-//            if (d < Math.abs(r0 - r1)) {
-//                /* no solution. one circle is contained in the other */
-//                return false;
-//            }
-//
-//            /* 'point 2' is the point where the line through the circle
-//             * intersection points crosses the line between the circle
-//             * centers.  
-//             */
-//
-//            /* Determine the distance from point 0 to point 2. */
-//            a = ((r0*r0) - (r1*r1) + (d*d)) / (2.0 * d) ;
-//
-//            /* Determine the coordinates of point 2. */
-//            x2 = x0 + (dx * a/d);
-//            y2 = y0 + (dy * a/d);
-//
-//            /* Determine the distance from point 2 to either of the
-//             * intersection points.
-//             */
-//            h = Math.sqrt((r0*r0) - (a*a));
-//
-//            /* Now determine the offsets of the intersection points from
-//             * point 2.
-//             */
-//            rx = -dy * (h/d);
-//            ry = dx * (h/d);
-//
-//            /* Determine the absolute intersection points. */
-//            var xi = x2 + rx;
-//            var xi_prime = x2 - rx;
-//            var yi = y2 + ry;
-//            var yi_prime = y2 - ry;
-//
-//            //return [xi, xi_prime, yi, yi_prime];
-//            
-//            return {'xi' : xi, 'xi_prime' : xi_prime, 'yi' : yi, 'yi_prime': yi_prime};
-//            
-//        };
-//        
+        Boom.GetIntersectDreePoints = function(p0, p1, p2) {
+            var p0r = p0.r;
+            var p1r = p1.r;
+            var p2r = p2.r;
+            
+            // kolla först om två cirklar skär. börja med dom två diagonala.. dom kommer skära sist. 
+            
+            // när vi väl har så att alla tre skär, kolla avståndet på "skärningarna", är det största avståndet inom toleransen så kan vi vara glada för tillfället..
+            
+            // förfina senare..
+            
+            do {
+                p0r++;
+                p1r++;
+                p2r++;
+            }while(!Boom.TestIntersection(p0.x, p0.y, p0r, p1.x, p1.y, p1r))
+            
+            //Boom.testDrawDot(p0.x, p0.y, p0r, "type3");
+            //Boom.testDrawDot(p1.x, p1.y, p1r, "type3");
+            //Boom.testDrawDot(p2.x, p2.y, p2r, "type3");
+            
+            
+            // kollar vi vart linjerna (som vi får ut med nuvarande skärnignar + kommande (slänger på lite mer i radie och kollar vinkeln osv..)) p2-p1 & p2-p0
+
+            var target = $("#divTarget");
+            
+            var p0_2Int_1 = Boom.GetPointOnTarget(target, Boom.TestIntersection(p0.x, p0.y, p0r, p2.x, p2.y, p2r));
+            var p1_2Int_1 = Boom.GetPointOnTarget(target, Boom.TestIntersection(p1.x, p1.y, p1r, p2.x, p2.y, p2r));
+            
+            p0r++;
+            p1r++;
+            p2r++;
+            
+            var p0_2Int_2 = Boom.GetPointOnTarget(target, Boom.TestIntersection(p0.x, p0.y, p0r, p2.x, p2.y, p2r));
+            var p1_2Int_2 = Boom.GetPointOnTarget(target, Boom.TestIntersection(p1.x, p1.y, p1r, p2.x, p2.y, p2r));
+            
+            // ta bara positioner som är i divTarget..
+            
+  
+            results = Boom.CheckLineIntersection(p0_2Int_1.x, p0_2Int_1.y,
+                                                 p0_2Int_2.x, p0_2Int_2.y, 
+                                                 p1_2Int_1.x, p1_2Int_1.y,
+                                                 p1_2Int_2.x, p1_2Int_2.y);
+            
+            
+            Boom.testDrawDot(results.x, results.y, 2, "type2");
+        };
+        
+        Boom.GetPointOnTarget = function(div, point) {
+            var left = 0;
+            var top = 0;
+            
+            var height = div.height() + top;
+            var width = div.width() + left;
+            
+            
+            var x1 = point.xi;
+            var y1 = point.yi;
+            
+            var x2 = point.xi_prime;
+            var y2 = point.yi_prime;
+            
+            if((x1 >= left && x1 <= left + width) && y1 >= top && y1 <= top + height) {
+                // ok..
+                return {'x' : x1, 'y' : y1};
+            }
+            
+            else if((x2 >= left && x2 <= left + width) && y2 >= top && y2 <= top + height) {
+                // ok..
+                return {'x' : x2, 'y' : y2};
+            }
+        };
+        
+        Boom.CheckLineIntersection = function(line1StartX, line1StartY, line1EndX, line1EndY, line2StartX, line2StartY, line2EndX, line2EndY) {
+            // if the lines intersect, the result contains the x and y of the intersection (treating the lines as infinite) and booleans for whether line segment 1 or line segment 2 contain the point
+            var denominator, a, b, numerator1, numerator2, result = {
+                x: null,
+                y: null
+            };
+            denominator = ((line2EndY - line2StartY) * (line1EndX - line1StartX)) - ((line2EndX - line2StartX) * (line1EndY - line1StartY));
+            if (denominator == 0) {
+                return result;
+            }
+            a = line1StartY - line2StartY;
+            b = line1StartX - line2StartX;
+            numerator1 = ((line2EndX - line2StartX) * a) - ((line2EndY - line2StartY) * b);
+            numerator2 = ((line1EndX - line1StartX) * a) - ((line1EndY - line1StartY) * b);
+            a = numerator1 / denominator;
+            b = numerator2 / denominator;
+
+            // if we cast these lines infinitely in both directions, they intersect here:
+            result.x = line1StartX + (a * (line1EndX - line1StartX));
+            result.y = line1StartY + (a * (line1EndY - line1StartY));
+            
+            return result;
+        };
+        
+        Boom.CalculatePointsDistance = function(x1, y1, x2, y2) {
+            return Math.sqrt( (x1 - x2) * (x1 - x2) + (y1 - y2) * (y1 - y2) );  
+        };
+        
+        
+        Boom.TestIntersection = function(x0, y0, r0, x1, y1, r1) {
+            var a, dx, dy, d, h, rx, ry;
+            var x2, y2;
+
+            /* dx and dy are the vertical and horizontal distances between
+             * the circle centers.
+             */
+            dx = x1 - x0;
+            dy = y1 - y0;
+
+            /* Determine the straight-line distance between the centers. */
+            d = Math.sqrt((dy*dy) + (dx*dx));
+
+            /* Check for solvability. */
+            if (d > (r0 + r1)) {
+                /* no solution. circles do not intersect. */
+                return false;
+            }
+            if (d < Math.abs(r0 - r1)) {
+                /* no solution. one circle is contained in the other */
+                return false;
+            }
+
+            /* 'point 2' is the point where the line through the circle
+             * intersection points crosses the line between the circle
+             * centers.  
+             */
+
+            /* Determine the distance from point 0 to point 2. */
+            a = ((r0*r0) - (r1*r1) + (d*d)) / (2.0 * d) ;
+
+            /* Determine the coordinates of point 2. */
+            x2 = x0 + (dx * a/d);
+            y2 = y0 + (dy * a/d);
+
+            /* Determine the distance from point 2 to either of the
+             * intersection points.
+             */
+            h = Math.sqrt((r0*r0) - (a*a));
+
+            /* Now determine the offsets of the intersection points from
+             * point 2.
+             */
+            rx = -dy * (h/d);
+            ry = dx * (h/d);
+
+            /* Determine the absolute intersection points. */
+            var xi = x2 + rx;
+            var xi_prime = x2 - rx;
+            var yi = y2 + ry;
+            var yi_prime = y2 - ry;
+
+            //return [xi, xi_prime, yi, yi_prime];
+            
+            return {'xi' : xi, 'xi_prime' : xi_prime, 'yi' : yi, 'yi_prime': yi_prime};
+        };
+        
+
+        
         Boom.testGetDivCenter = function(div) {
             var radius = 1; // cirkel..
 
@@ -532,9 +593,10 @@
             Info : "Khaki"
         }
         
+        
         Boom.Notify = function(notifyType, msg, delay = 5000) {
             $(".notifyer").remove(); // remove prev. notifyers from dom..
-                        
+            
             var mainDiv = $("#divMainContainer");
             var left = mainDiv.offset().left
 
@@ -551,7 +613,7 @@
             
 
             notifyer.hide().appendTo(mainDiv).fadeIn().delay(delay).fadeOut();
-        }
+        };
         
         Boom.MenuClick = function(e){
             if(e) e.preventDefault();
@@ -588,6 +650,8 @@
         
         Boom.BtnClear = function(e){
             if(e) e.preventDefault();
+            hits = [];
+            pointsFromSrv = [];
             $(".circleBase").remove();
         };
         
@@ -602,10 +666,10 @@
         jQuery.fn.center = function () {
             //this.css("position","absolute");
             //this.css("top", Math.max(0, (($(window).height() - $(this).outerHeight()) / 2) + $(window).scrollTop()) + "px");
-            this.css("left", Math.max(0, (($(window).width() - $(this).outerWidth()) / 2)) + "px");
+            this.css("left", Math.max(0, (($(window).width() - $(this).outerWidth()))) + "px");
             return this;
-        }
-        
+        };
+
     }(Boom));
     
     $(document).ready(function () {

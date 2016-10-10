@@ -62,7 +62,7 @@ BoomServer.prototype.onClientConnect = function(socket) {
         
         
 
-        socket.emit('testerEvent', { message: 'Received: ' + value });
+        socket.emit('testerEvent', { message: value });
         console.log("msg '" + value + "' sent!");
     });
     
