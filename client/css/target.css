@@ -21,7 +21,12 @@
     background: rgba(0,0,255,0.200);
     border: 3px solid blue;
 }
-
+.type4 {
+    width: 500px;
+    height: 500px;
+    background: rgba(0,0,255,0.10);
+    border: 3px solid blue;
+}
 
 
 html {
