@@ -106,6 +106,7 @@
             targetData : "targetData"
         }
         
+        var msgRcvTime;
 		Boom.InitSocketIo = function() {
 			socket = io();
             socket.on('numberOfClients', function(value) {
@@ -114,6 +115,9 @@
             
             socket.on('testerEvent', function(data) {
                 if(data && eventTypes[data.type] && data.message) {
+                    
+                    msgRcvTime = new Date().getTime();
+                    
                     var msgs = data.message.split('#');
                     
                     var points = [];
@@ -257,11 +261,14 @@
             })
         };
         
+        var clickTime;
         Boom.targetClickTest = function(e) {
             if(divTarget.hasClass("noTarget")) { // this? ist?
                 return;
             }
-            
+           
+            clickTime = new Date().getTime();
+
             var result = Boom.calculateHitAndDraw(e.offsetX, e.offsetY);
             
             var infoList = result.infoList;
@@ -419,9 +426,16 @@
             
             //$(".testCircle").remove();
             
-            Boom.Notify(notifyType.Success, "Antal loopar innan hittat resultat: " + loopCount);
+
             
-                
+            var endTime = new Date().getTime();
+            var srvTime = endTime - clickTime;
+            var drawTime = endTime - msgRcvTime;
+            
+            Boom.Notify(notifyType.Success, "Antal loopar innan hittat resultat: " + loopCount + " | serverTime: " + srvTime + "ms | drawTime: " + drawTime + "ms");
+            
+            
+            
 //            Boom.testDrawDot(p0.x, p0.y, p0r, "type3");
 //            Boom.testDrawDot(p1.x, p1.y, p1r, "type3");
 //            Boom.testDrawDot(p2.x, p2.y, p2r, "type3");
@@ -639,6 +653,12 @@
                 div.invisible();
             }
         }
+        
+        Boom.getDate = function() {
+            if (!Date.now) {
+                Date.now = function() { return new Date().getTime(); }
+            }  
+        };
         
         Boom.BtnClear = function(e){
             if(e) e.preventDefault();
