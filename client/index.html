@@ -143,7 +143,8 @@
             });
             
             connectTime = new Date().getTime();
-            socket.emit('getClientInfo', eventTypes.clientInfo + "|" + connectTime);
+            //socket.emit('event', eventTypes.clientInfo + "|" + connectTime);
+            Boom.sendEvent(eventTypes.clientInfo, connectTime);
             
             socket.on('clientInfoEvent', function(data) {
                 if(data && eventTypes[data.type] && data.address && data.date) {
@@ -178,6 +179,12 @@
                 }
             });
 		};
+        
+        Boom.sendEvent = function(eventType, eventData) {
+            if(socket && eventTypes[eventType] && eventData) {
+                socket.emit('event', eventType + "|" + eventData);
+            }
+        };
         
         Boom.drawSrvResult = function(points = null) {
             imgTarget = $("#imgTarget");
@@ -226,11 +233,7 @@
         };
         
         
-        Boom.SendMessage = function(type, value) {
-            if(socket && eventTypes[type] && value) {
-                socket.emit('clientEvent', type + "|" + value);
-            }
-        };
+
         
         Boom.InitView = function() {
             $(window).on("load resize", function () {
@@ -333,7 +336,7 @@
             var testItem1 = r == infoList[1].r ? 0 : ((infoList[1].r - r) / width);
             var testItem2 = r == infoList[2].r ? 0 : ((infoList[2].r - r) / width);
             
-            Boom.SendMessage(eventTypes.targetData, "0:"+testItem0+"#1:"+testItem1+"#2:"+testItem2);
+            Boom.sendEvent(eventTypes.targetData, "0:"+testItem0+"#1:"+testItem1+"#2:"+testItem2);
 
             var item = Boom.getHitRelativeCoordinates( e.offsetX, e.offsetY, width);
 
@@ -631,7 +634,7 @@
                             bulletSize = tempBulletSize;
                             Boom.Notify(notifyType.Success, "Bullet size changed to: " + elemTarget.val());
                             
-                            Boom.SendMessage(eventTypes.setting, "bulletSize set to " + bulletSize);
+                            Boom.sendEvent(eventTypes.setting, "bulletSize set to " + bulletSize);
                             
                         }
                         else {
