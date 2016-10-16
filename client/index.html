@@ -32,8 +32,32 @@
 </head>
     
 <body>
+    
+
+    
+    
     <!-- <br> --> <!-- För att notifyer ska få plats utan att lägga sig över meny... -->
     <div class="container" id="divMainContainer" style="max-height:100%; height: 100vh">
+        
+
+        <div id="modalConnected" class="modal">
+            <!-- Modal content -->
+            <div class="modal-content">
+                <div class="modal-header">
+                    <span id="modalConnectClose" class="close">&times</span>
+                    <h2>Modal Header</h2>
+                </div>
+                <div class="modal-body">
+                    <p>Some text in the Modal Body</p>
+                    <p>Some other text...</p>
+                </div>
+                <div class="modal-footer">
+                    <h3>Modal Footer</h3>
+                </div>
+            </div>
+        </div>
+
+        
         <div id="divHeader" class="header clearfix">
             <nav>
                 <ul class="nav nav-pills pull-right">
@@ -103,14 +127,36 @@
         
         eventTypes = {
             setting : "setting",
-            targetData : "targetData"
+            targetData : "targetData",
+            clientInfo : "clientInfo"
         }
         
         var msgRcvTime;
+        var connectTime;
 		Boom.InitSocketIo = function() {
 			socket = io();
             socket.on('numberOfClients', function(value) {
                 $('#numberOfClientsValue').text(value)
+                
+
+                
+            });
+            
+            connectTime = new Date().getTime();
+            socket.emit('getClientInfo', eventTypes.clientInfo + "|" + connectTime);
+            
+            socket.on('clientInfoEvent', function(data) {
+                if(data && eventTypes[data.type] && data.address && data.date) {
+                    if(data.date == connectTime.toString()) {
+
+                    //alert(data.connectedClients.join());
+                        
+                    //temp
+                    //var modal = document.getElementById('modalConnected');
+                    //modal.style.display = "block";
+                    //-temp
+                    }
+                }
             });
             
             socket.on('testerEvent', function(data) {
@@ -215,6 +261,14 @@
             $(".setting").on('blur', Boom.SaveSetting);
             
             Boom.ResizeBodyDiv();
+            
+            
+            // temp
+            $("#modalConnectClose").click(function (e) {
+                var modal = document.getElementById('modalConnected');
+                modal.style.display = "none";
+            });
+            //-temp
         };
         
         Boom.ResizeBodyDiv = function() {
@@ -653,12 +707,6 @@
                 div.invisible();
             }
         }
-        
-        Boom.getDate = function() {
-            if (!Date.now) {
-                Date.now = function() { return new Date().getTime(); }
-            }  
-        };
         
         Boom.BtnClear = function(e){
             if(e) e.preventDefault();
